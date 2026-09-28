@@ -13,7 +13,7 @@ const STAGES = [
   { id: 'COMPLETED', label: '09 — Complete' },
 ];
 
-export default function PipelineProgress({ job }: { job: SimulationJobStatus | null }) {
+export function PipelineProgress({ job }: { job: SimulationJobStatus | null }) {
   if (!job) return <div className="text-slate-500 text-sm">No simulation running</div>;
   const completedIds = new Set(job.stages.filter(s => s.done).map(s => s.stage_id));
   return (

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   MapPin, Database, Zap, Sliders, Cpu, FileCheck, Play,
-  ChevronLeft, ChevronRight, CheckCircle, AlertCircle, Waves
+  ChevronLeft, ChevronRight, CheckCircle, AlertCircle, Waves, Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

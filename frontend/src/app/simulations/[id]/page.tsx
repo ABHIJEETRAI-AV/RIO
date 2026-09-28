@@ -24,7 +24,7 @@ export default function SimulationDetailPage() {
 
   const mockSim = MOCK_SIMULATIONS.find(s => s.id === id) || MOCK_SIMULATIONS[0];
   const { status, isRunning, isCompleted } = useSimulation(
-    isCompleted ? null : (simData as Record<string, string> | null)?.['simulation_id'] as string | null
+    (simData as Record<string, string> | null)?.['simulation_id'] as string | null
   );
 
   useEffect(() => {
@@ -46,7 +46,7 @@ export default function SimulationDetailPage() {
   };
 
   const currentStatus = (status?.status) || (simData as Record<string, string> | null)?.['status'] || mockSim.status;
-  const isDemo = !simData || (simData as Record<string, unknown>)['is_demo'];
+  const isDemo = Boolean(!simData || (simData as Record<string, unknown>)['is_demo']);
 
   const paramRows = [
     { label: 'Study Area', value: '79.8–80.1°E, 30.2–30.4°N', icon: <MapPin className="h-4 w-4 text-slate-500" /> },

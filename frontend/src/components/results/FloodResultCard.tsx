@@ -4,7 +4,7 @@ import type { FloodResult } from '@/types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-export default function FloodResultCard({ result, model }: { result: FloodResult; model: 'SPH' | 'DELFT3D' }) {
+export function FloodResultCard({ result, model }: { result: FloodResult; model: 'SPH' | 'DELFT3D' }) {
   if (!result) return null;
   const metrics = [
     { label: 'Max Depth', value: `${result.max_depth_m?.toFixed(1)} m`, icon: '🌊' },

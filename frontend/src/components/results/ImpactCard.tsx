@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle } from 'lucide-react';
 
-export default function ImpactCard({ impact, model }: { impact: ImpactResult; model: string }) {
+export function ImpactCard({ impact, model }: { impact: ImpactResult; model: string }) {
   if (!impact) return null;
   const metrics = [
     { label: 'Affected Population', value: (impact.affected_population || 0).toLocaleString(), icon: '👥' },
