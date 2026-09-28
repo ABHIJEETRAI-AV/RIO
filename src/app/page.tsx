@@ -1,113 +1,151 @@
-import Image from "next/image";
+'use client';
+import { useState, useEffect, Suspense } from 'react';
+import dynamic from 'next/dynamic';
+import Link from 'next/link';
+import { Play, Activity, Waves, AlertTriangle, TrendingUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getDemoFull, getDemoRiver, getDemoReservoir, getDemoSettlements, getDemoRoads, getDemoDam } from '@/lib/api';
 
-export default function Home() {
+const FloodMap = dynamic(() => import('@/components/map/FloodMap'), { ssr: false, loading: () => <div className="bg-slate-900 animate-pulse w-full h-full" /> });
+
+export default function Dashboard() {
+  const [demoData, setDemoData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([getDemoDam(), getDemoRiver(), getDemoReservoir(), getDemoSettlements(), getDemoRoads()])
+      .then(([dam, river, res, settlements, roads]) => {
+        setDemoData({ dam: dam.data, river: river.data, reservoir: res.data, settlements: settlements.data, roads: roads.data });
+      })
+      .catch(() => setDemoData(null))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const statsCards = [
+    { label: 'Scenario', value: 'DAM BREAK', icon: '🏔️', badge: 'DEMO' },
+    { label: 'Max Inundation', value: '42.5 km²', icon: '🌊', badge: 'MOCK' },
+    { label: 'Max Depth', value: '14.2 m', icon: '📏', badge: 'MOCK' },
+    { label: 'Affected Pop.', value: '5,220', icon: '👥', badge: 'PRELIMINARY' },
+    { label: 'Peak Discharge', value: '7,050 m³/s', icon: '💧', badge: 'MOCK' },
+    { label: 'Arrival Time', value: '0.4 hrs', icon: '⏱️', badge: 'MOCK' },
+  ];
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <div className="flex flex-col h-[calc(100vh-56px)] overflow-hidden">
+      {/* Top bar */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0">
+        <div className="flex items-center gap-3">
+          <Waves className="h-5 w-5 text-cyan-400" />
+          <h1 className="font-semibold text-white">HADR Flood Simulation Platform</h1>
+          <Badge variant="demo">SYNTHETIC DEMO</Badge>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link href="/demo">
+            <Button size="sm" className="gap-2">
+              <Play className="h-4 w-4" fill="currentColor" />
+              RUN FULL DEMO
+            </Button>
+          </Link>
+          <Link href="/simulations/new">
+            <Button size="sm" variant="outline">New Simulation</Button>
+          </Link>
         </div>
       </div>
 
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
+      {/* Main content: Map + sidebar */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left sidebar */}
+        <div className="w-72 shrink-0 border-r border-slate-800 overflow-y-auto p-4 space-y-4">
+          {/* Study area */}
+          <div>
+            <h2 className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Study Area</h2>
+            <div className="bg-slate-900 rounded-lg p-3 space-y-1 text-sm">
+              <div className="text-white font-medium">Synthetic Himalayan Tributary</div>
+              <div className="text-slate-400 text-xs">30.2–30.4°N, 79.8–80.1°E</div>
+              <Badge variant="demo" className="mt-1">SYNTHETIC</Badge>
+            </div>
+          </div>
+
+          {/* Dam info */}
+          {demoData?.dam && (
+            <div>
+              <h2 className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Dam</h2>
+              <div className="bg-slate-900 rounded-lg p-3 space-y-2 text-sm">
+                <div className="text-white font-medium">{demoData.dam.name}</div>
+                <div className="grid grid-cols-2 gap-1 text-xs">
+                  <div className="text-slate-400">Height:</div><div className="text-slate-200">{demoData.dam.height_m}m</div>
+                  <div className="text-slate-400">Volume:</div><div className="text-slate-200">{demoData.dam.reservoir_volume_mcm} MCM</div>
+                  <div className="text-slate-400">Max WL:</div><div className="text-slate-200">{demoData.dam.max_water_level_m}m</div>
+                </div>
+                <Badge variant="demo">DEMO DATA</Badge>
+              </div>
+            </div>
+          )}
+
+          {/* Model status */}
+          <div>
+            <h2 className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Models</h2>
+            <div className="space-y-2">
+              {[{name:'SPH',color:'violet'},{name:'Delft3D',color:'blue'}].map(m => (
+                <div key={m.name} className="bg-slate-900 rounded-lg p-3 flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-medium text-white">{m.name}</div>
+                    <div className="text-xs text-slate-400">Adapter Ready</div>
+                  </div>
+                  <Badge variant="mock">MOCK</Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Quick links */}
+          <div className="space-y-2">
+            <Link href="/demo"><Button variant="outline" size="sm" className="w-full justify-start gap-2"><Play className="h-3.5 w-3.5" />Run Full Demo</Button></Link>
+            <Link href="/simulations"><Button variant="ghost" size="sm" className="w-full justify-start gap-2"><Activity className="h-3.5 w-3.5" />Simulations</Button></Link>
+          </div>
+        </div>
+
+        {/* Map */}
+        <div className="flex-1 relative">
+          {!loading && demoData ? (
+            <FloodMap
+              riverGeoJSON={demoData.river}
+              damLocation={demoData.dam?.coordinates}
+              reservoirGeoJSON={demoData.reservoir}
+              settlementsGeoJSON={demoData.settlements}
+              roadsGeoJSON={demoData.roads}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full bg-slate-900">
+              <div className="text-center space-y-3">
+                <Waves className="h-12 w-12 text-cyan-500 mx-auto animate-pulse" />
+                <p className="text-slate-400">{loading ? 'Loading demo data...' : 'Unable to connect to backend. Start the backend server.'}</p>
+                {!loading && <Link href="/demo"><Button>Try Demo Mode</Button></Link>}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
+      {/* Bottom metrics bar */}
+      <div className="shrink-0 border-t border-slate-800 px-4 py-3">
+        <div className="flex items-center gap-4 overflow-x-auto">
+          {statsCards.map(s => (
+            <div key={s.label} className="shrink-0 bg-slate-900 rounded-lg px-4 py-2 flex items-center gap-3">
+              <span className="text-lg">{s.icon}</span>
+              <div>
+                <div className="text-xs text-slate-400">{s.label}</div>
+                <div className="text-sm font-bold text-white">{s.value}</div>
+              </div>
+              <Badge variant={s.badge === 'MOCK' ? 'mock' : s.badge === 'PRELIMINARY' ? 'warning' : 'demo'} className="text-[10px]">
+                {s.badge}
+              </Badge>
+            </div>
+          ))}
+        </div>
       </div>
-    </main>
+    </div>
   );
 }
